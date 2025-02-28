@@ -1,0 +1,39 @@
+from flask import Flask, request
+from lib import airpuff_lib
+from twilio.twiml.messaging_response import MessagingResponse
+
+# Twilio credentials (ensure to keep them safe and secure)
+ACCOUNT_SID = 'ACa9dd12272b3de0539a2005c7e450b14c'
+AUTH_TOKEN = 'f79b71e09ec390c05f0b180d5bda11b0'
+
+SMS_REPLY_HAMPUFF = 'Wrong number. Text Hampuff at sms://+1-361-426-7833/ [361-HAM-PUFF]'
+
+app = Flask(__name__)
+
+@app.route("/sms", methods=['GET', 'POST'])
+def sms_reply():
+    """
+    Respond to incoming SMS with an appropriate reply.
+    """
+    full_body = request.values.get('Body', '').strip()  # Strip leading/trailing whitespace
+    body = full_body.lower()  # Ensure case-insensitivity
+    
+    if 'fuck' in body:
+        sms_resp_body = "Go fuck yourself, too"
+    elif 'shit' in body:
+        sms_resp_body = "Go shit your pants"
+    elif 'hampuff' in body:
+        sms_resp_body = SMS_REPLY_HAMPUFF
+    elif len(body) > 4:
+        sms_resp_body = "Not an airport. Please waste someone else's time"
+    else:
+        sms_resp_body = airpuff_lib.get_wx(body)
+
+    # Start our TwiML response
+    resp = MessagingResponse()
+    resp.message(sms_resp_body)
+    return str(resp)
+
+if __name__ == "__main__":
+    app.run(debug=True, host='127.0.0.1', port=5000)
+

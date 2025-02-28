@@ -1,0 +1,86 @@
+"""
+Gathers airport weather conditions to reply to an SMS with the latest update
+"""
+
+from lib import data_grabber
+from numbers import Number
+
+consent_message = "Your SMS request provides consent to send the reply."
+
+def get_wx(airport):
+    metar_json = data_grabber.get_data(airport)
+    try:
+        name              = metar_json['data'][0]['station']['name']
+    except:
+        name = "Unknown Airport: " + airport.upper()
+        airpuff_reply="AirPuff Airor: %s" \
+            % (name)
+        return str(airpuff_reply)
+    try:
+        date_obs          = metar_json['data'][0]['observed']
+    except:
+        date_obs          = 'NA'
+    try:
+        icao              = metar_json['data'][0]['icao']
+    except:
+        icao              = airport.upper()
+    icao_lo           = icao.lower()
+    try:
+        flt_cat           = metar_json['data'][0]['flight_category']
+    except:
+        flt_cat           = "UNK"
+    try:
+        bar_hg            = metar_json['data'][0]['barometer']['hg']
+    except:
+        bar_hg            = 'UNK'
+    try:
+        ceil_code         = metar_json['data'][0]['clouds'][0]['code']
+    except:
+        ceil_code         = 'UNK'
+    try:
+        ceil_ft           = metar_json['data'][0]['clouds'][0]['feet']
+    except:
+        ceil_ft           = '12000'
+    try:
+        temp_f            = metar_json['data'][0]['temperature']['fahrenheit']
+    except KeyError:
+        temp_f            = 0
+    except TypeError:
+        temp_f            = 0
+    try:
+        dewpt_f           = metar_json['data'][0]['dewpoint']['fahrenheit']
+    except KeyError:
+        dewpt_f           = 0
+    except TypeError:
+        dewpt_f           = 0
+    try:
+        t_dp_spread_f     = temp_f - dewpt_f
+    except:
+        t_dp_spread_f     = 0
+    try:
+        vis_mi            = metar_json['data'][0]['visibility']['miles']
+    except:
+        vis_mi            = -1
+    try:
+        win_deg           = metar_json['data'][0]["wind"]['degrees']
+    except:
+        win_deg           = 0
+    if isinstance(win_deg, Number):
+        empty_var         = "good"
+    else:
+        win_deg           = 0
+    try:
+        win_spd_kts       = metar_json['data'][0]["wind"]['speed_kts']
+    except:
+        win_spd_kts       = 0
+    if isinstance(win_spd_kts, Number):
+        empty_var         = "good"
+    else:
+        win_spd_kts           = 0
+    raw                   = metar_json['data'][0]['raw_text']
+    count                 = metar_json['results']
+
+    airpuff_reply="AirPuff [%s]:\n  %s: [%s] %03d@%skts - %smi - %s | %sft - %dF/%dF(%d) - %0.2f\" [@%s]\n\n%s" \
+% (icao, name, flt_cat.upper(), win_deg, win_spd_kts, vis_mi, ceil_code, ceil_ft, temp_f, dewpt_f, t_dp_spread_f, bar_hg, date_obs, consent_message)
+    return str(airpuff_reply)
+
