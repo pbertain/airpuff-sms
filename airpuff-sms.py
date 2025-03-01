@@ -74,11 +74,8 @@ def sms_reply():
         elif not isinstance(full_body, str):
             full_body = str(full_body)
         
-        print("p1: full_body")
         full_body = full_body.strip()
-        print("p2: full_body")
         body = full_body.lower()  # Ensure case-insensitivity
-        print("p1: body")
         
         app.logger.info(f"Received Body: {full_body} (Type: {type(full_body)})")
         
@@ -91,7 +88,6 @@ def sms_reply():
         else:
             # Process as list of airport codes if valid
             codes = body.split()[:5]  # Limit to 5 codes max
-            print(f"codes is {codes}")
             responses = []
             for code in codes:
                 if len(code) <= 4:
