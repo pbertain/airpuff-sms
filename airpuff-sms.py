@@ -10,8 +10,8 @@ from logging.handlers import RotatingFileHandler
 __version__ = "4"
 
 # Twilio credentials (ensure to keep them safe and secure)
-ACCOUNT_SID = 'ACa9dd12272b3de0539a2005c7e450b14c'
-AUTH_TOKEN = 'f79b71e09ec390c05f0b180d5bda11b0'
+ACCOUNT_SID = 'GET_NEW_CREDS'
+AUTH_TOKEN = 'GET_NEW_CREDS'
 
 SMS_REPLY_HAMPUFF = 'Wrong number. Text Hampuff at sms://+1-361-426-7833/ [361-HAM-PUFF]'
 
