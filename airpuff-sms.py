@@ -5,13 +5,25 @@ from flask import Flask, request, g
 from lib import airpuff_lib
 from twilio.twiml.messaging_response import MessagingResponse
 from logging.handlers import RotatingFileHandler
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Script version
-__version__ = "4"
+__version__ = "6"
 
-# Twilio credentials (ensure to keep them safe and secure)
-ACCOUNT_SID = 'GET_NEW_CREDS'
-AUTH_TOKEN = 'GET_NEW_CREDS'
+# Load environment variables from .env file
+if not load_dotenv():
+    print("Warning: .env file not found or not loaded. Ensure environment variables are set.")
+
+# Twilio credentials from environment variables
+ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
+AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
+
+# Ensure credentials are available
+if not ACCOUNT_SID or not AUTH_TOKEN:
+    raise ValueError("Twilio credentials are missing. Ensure TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN are set in the .env file.")
 
 SMS_REPLY_HAMPUFF = 'Wrong number. Text Hampuff at sms://+1-361-426-7833/ [361-HAM-PUFF]'
 
@@ -39,7 +51,7 @@ def log_request(response):
     log_data = {
         "ip": client_ip,
         "status_code": response.status_code,
-        "request_data": request.values.get('Body', '').strip(),
+        "request_data": request.values.get('Body', ''),
         "user_agent": user_agent,
         "response_time": round(response_time, 4)
     }
@@ -56,11 +68,20 @@ def sms_reply():
     Respond to incoming SMS with an appropriate reply.
     """
     try:
-        full_body = request.values.get('Body', '')
-        app.logger.info(f"Received Body: {full_body} (Type: {type(full_body)})")  # Log the type of input
-
-        full_body = str(full_body).strip()  # Ensure full_body is a string
-
+        full_body = request.values.get('Body')
+        if full_body is None:
+            full_body = ""
+        elif not isinstance(full_body, str):
+            full_body = str(full_body)
+        
+        print("p1: full_body")
+        full_body = full_body.strip()
+        print("p2: full_body")
+        body = full_body.lower()  # Ensure case-insensitivity
+        print("p1: body")
+        
+        app.logger.info(f"Received Body: {full_body} (Type: {type(full_body)})")
+        
         if 'fuck' in body:
             sms_resp_body = "Go fuck yourself, too"
         elif 'shit' in body:
@@ -70,6 +91,7 @@ def sms_reply():
         else:
             # Process as list of airport codes if valid
             codes = body.split()[:5]  # Limit to 5 codes max
+            print(f"codes is {codes}")
             responses = []
             for code in codes:
                 if len(code) <= 4:
@@ -77,9 +99,9 @@ def sms_reply():
                 else:
                     responses.append(f"{code.upper()}: Not a valid airport code.")
             sms_resp_body = "AirPuff:\n" + "\n".join(responses) + f"\n\n{airpuff_lib.CONSENT_MESSAGE}"
-
+    
     except Exception as e:
-        app.logger.error(f"Error processing message: {str(e)}")
+        app.logger.error(f"Error processing message: {str(e)} (Received Body: {full_body}, Type: {type(full_body)})")
         sms_resp_body = "Sorry, something went wrong while processing your request."
 
     # Start our TwiML response
