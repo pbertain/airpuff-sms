@@ -1,0 +1,12 @@
+---
+# AirPuff SMS Service Configuration
+# These can be overridden via config.yml deployment section
+airpuff_app_dir: "{{ lookup('env', 'AIRPUFF_APP_DIR') | default('/opt/airpuff-sms') }}"
+airpuff_log_dir: "{{ lookup('env', 'AIRPUFF_LOG_DIR') | default('/var/log/airpuff-sms') }}"
+airpuff_service_name: airpuff-sms
+airpuff_port: "{{ lookup('env', 'AIRPUFF_PORT') | default(25025) }}"
+
+# Environment variables (should be overridden in production)
+checkwx_api_key: "{{ lookup('env', 'CHECKWX_API_KEY') | default('your_checkwx_api_key_here') }}"
+twilio_account_sid: "{{ lookup('env', 'TWILIO_ACCOUNT_SID') | default('your_twilio_account_sid_here') }}"
+twilio_auth_token: "{{ lookup('env', 'TWILIO_AUTH_TOKEN') | default('your_twilio_auth_token_here') }}"

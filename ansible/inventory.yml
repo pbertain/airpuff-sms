@@ -1,0 +1,32 @@
+---
+all:
+  children:
+    airpuff_servers:
+      hosts:
+        host77.nird.club:
+          ansible_host: host77.nird.club
+          ansible_user: paulb
+          ansible_ssh_private_key_file: ~/.ssh/keys/paulb-nird-club-id_ed25519
+          ansible_become: yes
+          ansible_become_method: sudo
+          # Optional: Override default paths for this host
+          # airpuff_app_dir: /opt/airpuff-sms
+          # airpuff_log_dir: /var/log/airpuff-sms
+        host78.nird.club:
+          ansible_host: host78.nird.club
+          ansible_user: paulb
+          ansible_ssh_private_key_file: ~/.ssh/keys/paulb-nird-club-id_ed25519
+          ansible_become: yes
+          ansible_become_method: sudo
+          # Optional: Override default paths for this host
+          # airpuff_app_dir: /opt/airpuff-sms
+          # airpuff_log_dir: /var/log/airpuff-sms
+        host79.nird.club:
+          ansible_host: host79.nird.club
+          ansible_user: paulb
+          ansible_ssh_private_key_file: ~/.ssh/keys/paulb-nird-club-id_ed25519
+          ansible_become: yes
+          ansible_become_method: sudo
+          # Optional: Override default paths for this host
+          # airpuff_app_dir: /opt/airpuff-sms
+          # airpuff_log_dir: /var/log/airpuff-sms

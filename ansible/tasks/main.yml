@@ -1,0 +1,85 @@
+---
+- name: Ensure required packages are installed
+  apt:
+    name:
+      - python3
+      - python3-venv
+      - python3-pip
+    state: present
+    update_cache: yes
+
+- name: Create application directory
+  file:
+    path: "{{ airpuff_app_dir }}"
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: '0755'
+
+- name: Ensure log directory exists
+  file:
+    path: "{{ airpuff_log_dir }}"
+    state: directory
+    owner: www-data
+    group: adm
+    mode: '0755'
+
+- name: Copy application files
+  copy:
+    src: "{{ playbook_dir }}/../app/{{ item }}"
+    dest: "{{ airpuff_app_dir }}/{{ item }}"
+    owner: www-data
+    group: www-data
+    mode: '0644'
+  loop:
+    - airpuff-sms.py
+    - requirements.txt
+  notify: Restart airpuff-sms
+
+- name: Copy lib directory
+  copy:
+    src: "{{ playbook_dir }}/../app/lib/"
+    dest: "{{ airpuff_app_dir }}/lib/"
+    owner: www-data
+    group: www-data
+    mode: '0755'
+  notify: Restart airpuff-sms
+
+- name: Copy logrotate config
+  copy:
+    src: "{{ playbook_dir }}/files/airpuff-sms-logrotate.conf"
+    dest: /etc/logrotate.d/airpuff-sms
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Create virtual environment
+  command: python3 -m venv {{ airpuff_app_dir }}/venv
+  args:
+    creates: "{{ airpuff_app_dir }}/venv/bin/activate"
+
+- name: Install Python requirements
+  pip:
+    requirements: "{{ airpuff_app_dir }}/requirements.txt"
+    virtualenv: "{{ airpuff_app_dir }}/venv"
+    virtualenv_python: python3
+
+- name: Copy systemd service file
+  template:
+    src: "{{ playbook_dir }}/templates/airpuff-sms.service.j2"
+    dest: "/etc/systemd/system/{{ airpuff_service_name }}.service"
+  notify:
+    - Reload systemd
+    - Restart airpuff-sms
+
+- name: Create .env file with environment variables
+  copy:
+    dest: "{{ airpuff_app_dir }}/.env"
+    content: |
+      CHECKWX_API_KEY={{ checkwx_api_key }}
+      TWILIO_ACCOUNT_SID={{ twilio_account_sid }}
+      TWILIO_AUTH_TOKEN={{ twilio_auth_token }}
+    owner: www-data
+    group: www-data
+    mode: '0640'
+  notify: Restart airpuff-sms
