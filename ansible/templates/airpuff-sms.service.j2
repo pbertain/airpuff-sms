@@ -1,0 +1,16 @@
+[Unit]
+Description=AirPuff SMS Web Service
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory={{ airpuff_app_dir }}
+EnvironmentFile={{ airpuff_app_dir }}/.env
+ExecStart={{ airpuff_app_dir }}/venv/bin/python3 airpuff-sms.py
+Restart=on-failure
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

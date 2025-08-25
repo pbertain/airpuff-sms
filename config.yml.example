@@ -1,0 +1,16 @@
+# AirPuff SMS Configuration Example
+# Copy this file to config.yml and fill in your actual values
+# 
+# IMPORTANT: Never commit config.yml to version control!
+# This file contains sensitive credentials.
+
+environment:
+  CHECKWX_API_KEY: "your_actual_checkwx_api_key_here"
+  TWILIO_ACCOUNT_SID: "your_actual_twilio_account_sid_here"
+  TWILIO_AUTH_TOKEN: "your_actual_twilio_auth_token_here"
+
+# Optional: Override default paths
+# deployment:
+#   app_dir: "/opt/airpuff-sms"
+#   log_dir: "/var/log/airpuff-sms"
+#   port: 25025

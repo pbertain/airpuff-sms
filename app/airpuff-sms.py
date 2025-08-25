@@ -13,17 +13,12 @@ load_dotenv()
 # Script version
 __version__ = "6"
 
-# Load environment variables from .env file
-if not load_dotenv():
-    print("Warning: .env file not found or not loaded. Ensure environment variables are set.")
-
 # Twilio credentials from environment variables
 ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
 AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
 
-# Ensure credentials are available
 if not ACCOUNT_SID or not AUTH_TOKEN:
-    raise ValueError("Twilio credentials are missing. Ensure TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN are set in the .env file.")
+    logging.warning("[AirPuff] Twilio credentials not fully configured.")
 
 SMS_REPLY_HAMPUFF = 'Wrong number. Text Hampuff at sms://+1-361-426-7833/ [361-HAM-PUFF]'
 
@@ -64,21 +59,11 @@ def log_request(response):
 
 @app.route("/sms", methods=['GET', 'POST'])
 def sms_reply():
-    """
-    Respond to incoming SMS with an appropriate reply.
-    """
     try:
-        full_body = request.values.get('Body')
-        if full_body is None:
-            full_body = ""
-        elif not isinstance(full_body, str):
-            full_body = str(full_body)
-        
-        full_body = full_body.strip()
-        body = full_body.lower()  # Ensure case-insensitivity
-        
+        full_body = request.values.get('Body', '')
+        body = full_body.strip().lower()
         app.logger.info(f"Received Body: {full_body} (Type: {type(full_body)})")
-        
+
         if 'fuck' in body:
             sms_resp_body = "Go fuck yourself, too"
         elif 'shit' in body:
@@ -86,7 +71,6 @@ def sms_reply():
         elif 'hampuff' in body:
             sms_resp_body = SMS_REPLY_HAMPUFF
         else:
-            # Process as list of airport codes if valid
             codes = body.split()[:5]  # Limit to 5 codes max
             responses = []
             for code in codes:
@@ -95,16 +79,15 @@ def sms_reply():
                 else:
                     responses.append(f"{code.upper()}: Not a valid airport code.")
             sms_resp_body = "AirPuff:\n" + "\n".join(responses) + f"\n\n{airpuff_lib.CONSENT_MESSAGE}"
-    
+
     except Exception as e:
         app.logger.error(f"Error processing message: {str(e)} (Received Body: {full_body}, Type: {type(full_body)})")
         sms_resp_body = "Sorry, something went wrong while processing your request."
 
-    # Start our TwiML response
     resp = MessagingResponse()
     resp.message(sms_resp_body)
     return str(resp)
 
 if __name__ == "__main__":
-    app.run(debug=True, host='127.0.0.1', port=5000)
+    app.run(debug=True, host='127.0.0.1', port=25025)
 
