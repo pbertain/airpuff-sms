@@ -1,0 +1,2 @@
+export TWILIO_AUTH_TOKEN=...    # load from .env file
+export PUBLIC_WEBHOOK_URL="https://www.airpuff.info/sms/inbound"  # helps signature checks behind proxies

@@ -5,5 +5,15 @@
   become_method: sudo
   vars_files:
     - vars/main.yml
+  handlers:
+    - name: Reload systemd
+      systemd:
+        daemon_reload: yes
+
+    - name: Restart airpuff-sms
+      systemd:
+        name: "{{ airpuff_service_name }}"
+        state: restarted
+        enabled: yes
   tasks:
     - include_tasks: tasks/main.yml

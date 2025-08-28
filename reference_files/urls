@@ -1,0 +1,4 @@
+	•	Messaging webhook (for your phone number or Messaging Service):
+POST https://<your-domain>/sms/inbound
+	•	Status callback (for outbound messages):
+POST https://<your-domain>/sms/status
