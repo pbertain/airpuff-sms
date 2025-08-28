@@ -1,16 +1,27 @@
-# AirPuff SMS Configuration Example
-# Copy this file to config.yml and fill in your actual values
-# 
-# IMPORTANT: Never commit config.yml to version control!
-# This file contains sensitive credentials.
+# AirPuff SMS Service Configuration
+# Copy this file to config.yml and update with your values
 
-environment:
-  CHECKWX_API_KEY: "your_actual_checkwx_api_key_here"
-  TWILIO_ACCOUNT_SID: "your_actual_twilio_account_sid_here"
-  TWILIO_AUTH_TOKEN: "your_actual_twilio_auth_token_here"
+# Twilio Configuration
+twilio_account_sid: "your_twilio_account_sid_here"
+twilio_auth_token: "your_twilio_auth_token_here"
+twilio_from_number: "+1234567890"  # Your Twilio phone number
 
-# Optional: Override default paths
-# deployment:
-#   app_dir: "/opt/airpuff-sms"
-#   log_dir: "/var/log/airpuff-sms"
-#   port: 25025
+# Webhook URLs (must be publicly accessible HTTPS)
+public_webhook_url: "https://your-domain.com"  # Base URL for your service
+public_status_url: "https://your-domain.com"   # Base URL for status callbacks
+
+# Service Configuration
+airpuff_app_dir: "/opt/airpuff-sms"
+airpuff_log_dir: "/var/log/airpuff-sms"
+airpuff_port: 25025
+
+# API Keys
+checkwx_api_key: "your_checkwx_api_key_here"
+
+# Deployment Configuration
+deployment:
+  hosts:
+    - <insert hosts here>
+  ansible_user: <username>
+  become: yes
+  become_method: sudo

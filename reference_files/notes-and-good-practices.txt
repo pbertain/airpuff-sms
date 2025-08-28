@@ -1,0 +1,9 @@
+Notes & good practices
+	•	Let Twilio handle compliance (Advanced Opt-Out): Twilio will auto-respond to STOP/START and block sends to opted-out numbers. You should still mirror that state locally:
+	•	Use your status callback to mark numbers unsubscribed on error 21610.
+	•	If you also want to reply to keywords yourself, keep your replies simple and don’t duplicate Twilio’s STOP confirmation.
+	•	Signature validation: Keep it on (shown above) to stop spoofed calls to your webhook.
+	•	Consent logging: Save consent_ts on opt-in (JOIN/START/YES). Helpful for audits.
+	•	Idempotency: Treat repeated JOIN/STOP as no-ops; your code above safely updates the row.
+	•	Storage: For scale, move from SQLite → Postgres/Redis; add indexes and maybe a small cache.
+	•	Keyword flexibility: Consider supporting “JOIN TEAM A” to tag users; store tags in a second table.

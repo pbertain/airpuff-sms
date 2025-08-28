@@ -46,23 +46,31 @@ try:
     with open('$CONFIG_FILE', 'r') as f:
         config = yaml.safe_load(f)
     
-    # Load environment variables
-    env_vars = config.get('environment', {})
-    for key, value in env_vars.items():
-        if value != 'your_checkwx_api_key_here' and value != 'your_twilio_account_sid_here' and value != 'your_twilio_auth_token_here':
-            print('export ' + key + '=\"' + str(value) + '\"')
-        else:
-            print('echo \"Warning: ' + key + ' still has default value\" >&2')
-            sys.exit(1)
+    # Load Twilio configuration
+    if 'twilio_account_sid' in config:
+        print('export TWILIO_ACCOUNT_SID=\"' + str(config['twilio_account_sid']) + '\"')
+    if 'twilio_auth_token' in config:
+        print('export TWILIO_AUTH_TOKEN=\"' + str(config['twilio_auth_token']) + '\"')
+    if 'twilio_from_number' in config:
+        print('export TWILIO_FROM_NUMBER=\"' + str(config['twilio_from_number']) + '\"')
     
-    # Load deployment configuration
-    deployment = config.get('deployment', {})
-    if deployment.get('app_dir'):
-        print('export AIRPUFF_APP_DIR=\"' + str(deployment['app_dir']) + '\"')
-    if deployment.get('log_dir'):
-        print('export AIRPUFF_LOG_DIR=\"' + str(deployment['log_dir']) + '\"')
-    if deployment.get('port'):
-        print('export AIRPUFF_PORT=\"' + str(deployment['port']) + '\"')
+    # Load webhook URLs
+    if 'public_webhook_url' in config:
+        print('export PUBLIC_WEBHOOK_URL=\"' + str(config['public_webhook_url']) + '\"')
+    if 'public_status_url' in config:
+        print('export PUBLIC_STATUS_URL=\"' + str(config['public_status_url']) + '\"')
+    
+    # Load API keys
+    if 'checkwx_api_key' in config:
+        print('export CHECKWX_API_KEY=\"' + str(config['checkwx_api_key']) + '\"')
+    
+    # Load service configuration
+    if 'airpuff_app_dir' in config:
+        print('export AIRPUFF_APP_DIR=\"' + str(config['airpuff_app_dir']) + '\"')
+    if 'airpuff_log_dir' in config:
+        print('export AIRPUFF_LOG_DIR=\"' + str(config['airpuff_log_dir']) + '\"')
+    if 'airpuff_port' in config:
+        print('export AIRPUFF_PORT=\"' + str(config['airpuff_port']) + '\"')
         
 except Exception as e:
     print('echo \"Error parsing config file: ' + str(e) + '\" >&2', file=sys.stderr)
@@ -75,10 +83,9 @@ if [ -z "$CHECKWX_API_KEY" ] || [ -z "$TWILIO_ACCOUNT_SID" ] || [ -z "$TWILIO_AU
     echo "Please update your $CONFIG_FILE file with the actual values."
     echo ""
     echo "Example:"
-    echo "  environment:"
-    echo "    CHECKWX_API_KEY: 'your_actual_api_key'"
-    echo "    TWILIO_ACCOUNT_SID: 'your_actual_sid'"
-    echo "    TWILIO_AUTH_TOKEN: 'your_actual_token'"
+    echo "  twilio_account_sid: 'your_actual_sid'"
+    echo "  twilio_auth_token: 'your_actual_token'"
+    echo "  checkwx_api_key: 'your_actual_api_key'"
     exit 1
 fi
 
@@ -100,6 +107,12 @@ if [ -n "$AIRPUFF_LOG_DIR" ]; then
 fi
 if [ -n "$AIRPUFF_PORT" ]; then
     echo "🌐 Port: $AIRPUFF_PORT"
+fi
+if [ -n "$PUBLIC_WEBHOOK_URL" ]; then
+    echo "🌐 Webhook URL: $PUBLIC_WEBHOOK_URL"
+fi
+if [ -n "$PUBLIC_STATUS_URL" ]; then
+    echo "📊 Status URL: $PUBLIC_STATUS_URL"
 fi
 echo ""
 

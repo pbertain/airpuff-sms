@@ -79,7 +79,17 @@
       CHECKWX_API_KEY={{ checkwx_api_key }}
       TWILIO_ACCOUNT_SID={{ twilio_account_sid }}
       TWILIO_AUTH_TOKEN={{ twilio_auth_token }}
+      TWILIO_FROM_NUMBER={{ twilio_from_number }}
+      PUBLIC_WEBHOOK_URL={{ public_webhook_url }}
+      PUBLIC_STATUS_URL={{ public_status_url }}
     owner: www-data
     group: www-data
     mode: '0640'
   notify: Restart airpuff-sms
+
+- name: Initialize database
+  command: "{{ airpuff_app_dir }}/venv/bin/python -c 'from lib.db_utils import init_database; init_database(); print(\"Database initialized successfully\")'"
+  args:
+    chdir: "{{ airpuff_app_dir }}"
+    creates: "{{ airpuff_app_dir }}/subscribers.db"
+  tags: database

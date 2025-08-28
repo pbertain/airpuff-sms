@@ -1,176 +1,165 @@
 # AirPuff SMS Service
 
-A Flask-based SMS service that provides weather information for airports via Twilio.
-
-## Repository Structure
-
-```
-airpuff-sms/
-├── app/                    # Application code
-│   ├── airpuff-sms.py     # Main Flask application
-│   ├── requirements.txt    # Python dependencies
-│   └── lib/               # Library modules
-├── ansible/               # Deployment configuration
-│   ├── deploy.yml         # Main playbook
-│   ├── inventory.yml      # Host inventory
-│   ├── vars/              # Variables
-│   ├── tasks/             # Task definitions
-│   ├── handlers/          # Event handlers
-│   ├── templates/         # Jinja2 templates
-│   └── files/             # Static files
-├── config.yml.example     # Configuration template
-├── README.md              # This file
-└── deploy.sh              # Deployment script
-```
+A Twilio-powered SMS service for providing weather information via text message.
 
 ## Features
 
-- SMS-based weather queries for airport codes
-- Integration with CheckWX API for METAR data
-- Twilio SMS integration
-- Comprehensive logging and monitoring
-- Ansible deployment automation
+- **Weather Information**: Get METAR/TAF data for airport codes
+- **Subscriber Management**: Opt-in/opt-out compliance with Twilio Advanced Opt-Out
+- **Security**: Twilio signature validation for webhook security
+- **Delivery Tracking**: Status callbacks for message delivery monitoring
+- **Compliance**: Automatic handling of STOP/START keywords
 
-## Quick Start
+## Twilio Setup
 
-### Local Development
+### 1. Configure Your Twilio Phone Number
 
-1. Navigate to the app directory:
-   ```bash
-   cd app
-   ```
+In your Twilio Console, set up your phone number with these webhooks:
 
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+- **Messaging webhook**: `POST https://your-domain.com/sms/inbound`
+- **Status callback**: `POST https://your-domain.com/sms/status`
 
-3. Set environment variables:
-   ```bash
-   export TWILIO_ACCOUNT_SID="your_account_sid"
-   export TWILIO_AUTH_TOKEN="your_auth_token"
-   export CHECKWX_API_KEY="your_checkwx_api_key"
-   ```
+### 2. Enable Advanced Opt-Out
 
-4. Run the service:
-   ```bash
-   python airpuff-sms.py
-   ```
+In Twilio Console > Messaging > Compliance:
+- Enable "Advanced Opt-Out" for automatic compliance handling
+- Twilio will automatically respond to STOP/START keywords
 
-The service will run on `http://127.0.0.1:25025`
+### 3. Environment Variables
 
-## Deployment with Ansible
+Create a `config.yml` file with your Twilio credentials:
 
-This repository includes Ansible playbooks for automated deployment.
+```yaml
+# Twilio Configuration
+twilio_account_sid: "your_twilio_account_sid_here"
+twilio_auth_token: "your_twilio_auth_token_here"
+twilio_from_number: "+1234567890"  # Your Twilio phone number
+
+# Webhook URLs (must be publicly accessible HTTPS)
+public_webhook_url: "https://your-domain.com"
+public_status_url: "https://your-domain.com"
+
+# API Keys
+checkwx_api_key: "your_checkwx_api_key_here"
+```
+
+## API Endpoints
+
+### SMS Webhook (`/sms/inbound`)
+- **Method**: POST
+- **Purpose**: Receives incoming SMS messages
+- **Security**: Validates Twilio signature
+- **Features**: 
+  - Handles compliance keywords (STOP/START/HELP)
+  - Processes weather requests for subscribed users
+  - Manages subscriber status
+
+### Status Callback (`/sms/status`)
+- **Method**: POST
+- **Purpose**: Receives delivery status updates
+- **Security**: Validates Twilio signature
+- **Features**: 
+  - Tracks message delivery status
+  - Handles compliance errors (e.g., 21610 for opt-outs)
+  - Logs delivery failures
+
+### Health Check (`/health`)
+- **Method**: GET
+- **Purpose**: Service health monitoring
+- **Response**: Service status and version
+
+### Webhook URLs (`/webhook-urls`)
+- **Method**: GET
+- **Purpose**: Get configured webhook URLs for Twilio setup
+
+## Subscriber Management
+
+The service automatically manages subscribers based on SMS interactions:
+
+- **JOIN/START/YES**: Opts user in (consent logged)
+- **STOP/STOPALL/UNSUBSCRIBE**: Opts user out
+- **HELP/INFO**: Provides usage information
+- **Weather requests**: Only processed for subscribed users
+
+## Database Schema
+
+Subscribers are stored in SQLite with this structure:
+
+```sql
+CREATE TABLE subscribers (
+  phone_e164 TEXT PRIMARY KEY,
+  status TEXT NOT NULL,              -- 'subscribed' | 'unsubscribed' | 'pending'
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  consent_ts TEXT,                   -- when they opted-in
+  last_keyword TEXT                  -- last keyword we saw
+);
+```
+
+## Deployment
 
 ### Prerequisites
+- Python 3.6+
+- Ansible for deployment
+- Publicly accessible HTTPS domain
 
-- Target server running Ubuntu/Debian
-- Ansible installed on your control machine
-- SSH access to target server
-
-### Configuration
-
-1. **Set up your configuration file:**
-   ```bash
-   cp config.yml.example config.yml
-   # Edit config.yml with your actual values
-   ```
-
-2. **Update the inventory file** with your SSH credentials in `ansible/inventory.yml`
-
-3. **Test connectivity** to make sure Ansible can reach your hosts:
-   ```bash
-   ansible all -i ansible/inventory.yml -m ping
-   ```
-
-### Deployment
-
-**Using the deployment script (recommended):**
+### Deploy with Ansible
 ```bash
 ./deploy.sh
 ```
 
-**Using Ansible directly:**
+The deployment script will:
+1. Install dependencies
+2. Set up the service
+3. Configure systemd service
+4. Create necessary directories and permissions
+
+## Security Features
+
+- **Twilio Signature Validation**: Prevents webhook spoofing
+- **Environment Variable Configuration**: Secure credential management
+- **Proper File Permissions**: Restricted access to sensitive files
+- **Logging**: Comprehensive request and error logging
+
+## Best Practices Implemented
+
+- **Let Twilio handle compliance**: Advanced Opt-Out enabled
+- **Signature validation**: Kept on for security
+- **Consent logging**: Timestamps for opt-ins
+- **Idempotency**: Safe handling of repeated keywords
+- **Error handling**: Graceful degradation on failures
+- **Status callbacks**: Proper delivery tracking
+
+## Monitoring
+
+- **Logs**: Rotating log files in `/var/log/airpuff-sms/`
+- **Health checks**: `/health` endpoint for monitoring
+- **Delivery tracking**: Status callbacks for message delivery
+- **Subscriber metrics**: Database tracking of user engagement
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Webhook not receiving messages**: Check Twilio webhook URL configuration
+2. **Signature validation errors**: Verify `PUBLIC_WEBHOOK_URL` environment variable
+3. **Database errors**: Ensure proper permissions on `/opt/airpuff-sms/` directory
+4. **Service not starting**: Check systemd logs with `journalctl -u airpuff-sms`
+
+### Logs
+- Application logs: `/var/log/airpuff-sms/access.log`
+- System logs: `journalctl -u airpuff-sms`
+
+## Development
+
+### Local Testing
 ```bash
-ansible-playbook -i ansible/inventory.yml ansible/deploy.yml
+cd app
+python airpuff-sms.py
 ```
 
-**Deploy to specific hosts:**
-```bash
-./deploy.sh ansible/inventory.yml host77.nird.club
-```
-
-### What Gets Deployed
-
-- Python application files from `app/` directory
-- Systemd service for automatic startup
-- Log rotation configuration
-- Virtual environment with dependencies
-- Proper file permissions and ownership
-
-## Configuration
-
-The deployment script automatically loads environment variables from `config.yml`. This file contains:
-
-```yaml
-environment:
-  CHECKWX_API_KEY: "your_actual_checkwx_api_key"
-  TWILIO_ACCOUNT_SID: "your_actual_twilio_account_sid"
-  TWILIO_AUTH_TOKEN: "your_actual_twilio_auth_token"
-```
-
-**Security Note:** The `config.yml` file is automatically added to `.gitignore` to prevent accidentally committing sensitive credentials. Always use `config.yml.example` as a template.
-
-## API Endpoints
-
-- `POST /sms` - Main SMS endpoint for Twilio webhook
-
-## SMS Usage
-
-Send airport codes to the service:
-- Single code: `KIAH`
-- Multiple codes: `KIAH KHOU KDFW`
-
-## Environment Variables
-
-- `TWILIO_ACCOUNT_SID` - Your Twilio account SID
-- `TWILIO_AUTH_TOKEN` - Your Twilio auth token
-- `CHECKWX_API_KEY` - Your CheckWX API key for weather data
-
-## Logging
-
-Logs are written to `/var/log/airpuff-sms/access.log` with automatic rotation.
-
-## Service Management
-
-```bash
-# Start the service
-sudo systemctl start airpuff-sms
-
-# Enable auto-start
-sudo systemctl enable airpuff-sms
-
-# Check status
-sudo systemctl status airpuff-sms
-
-# View logs
-sudo journalctl -u airpuff-sms -f
-```
-
-## Development Workflow
-
-1. **Application Changes**: Make changes in the `app/` directory
-2. **Deployment Changes**: Modify Ansible files in the `ansible/` directory
-3. **Configuration**: Update `config.yml` with your credentials
-4. **Testing**: Test locally in the `app/` directory
-5. **Deployment**: Use the deployment script to deploy to servers
-
-## Version History
-
-- Version 6: Improved error handling and logging
-- Version 5: Fixed data parsing issues
-- Version 4: Added comprehensive logging
-- Version 3: Initial Twilio integration
-- Version 2: Weather API integration
-- Version 1: Basic Flask setup
+### Adding Features
+- New endpoints: Add routes to `airpuff-sms.py`
+- Database changes: Update `lib/db_utils.py`
+- Twilio integration: Extend `lib/twilio_utils.py`
+- Outbound messaging: Use `lib/outbound_sms.py`
