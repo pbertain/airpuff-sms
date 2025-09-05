@@ -1,5 +1,6 @@
 # AirPuff SMS Service Configuration
 # Copy this file to config.yml and update with your values
+# Inserting comment to try and trigger git action
 
 # Twilio Configuration
 twilio_account_sid: "your_twilio_account_sid_here"
@@ -21,7 +22,7 @@ checkwx_api_key: "your_checkwx_api_key_here"
 # Deployment Configuration
 deployment:
   hosts:
-    - <insert hosts here>
+    - insert hosts here
   ansible_user: <username>
   become: yes
   become_method: sudo
