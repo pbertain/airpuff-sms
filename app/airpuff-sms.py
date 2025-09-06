@@ -112,7 +112,7 @@ def sms_inbound():
                 else:
                     responses.append(f"{code.upper()}: Not a valid airport code.")
             
-            sms_resp_body = "AirPuff:\n" + "\n".join(responses) + f"\n\n{airpuff_lib.CONSENT_MESSAGE}"
+            sms_resp_body = "AirPuff:\n" + "\n".join(responses)
             
         except Exception as e:
             app.logger.error(f"Error processing weather request: {str(e)}")
